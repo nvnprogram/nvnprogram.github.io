@@ -81,7 +81,7 @@ function fitToViewport() {
   // Page fits -> the user must not be able to pan it (touch-action: none on the root; inner scrollers re-enable pan-y).
   pageFits = natural * fit <= vh + 0.5;
   parkY = pageFits && navigator.maxTouchPoints > 1 ? PARK : 0;
-  document.documentElement.style.overflow = '';
+  document.documentElement.style.overflow = pageFits && !parkY ? 'hidden' : '';
   document.documentElement.style.touchAction = pageFits ? 'none' : '';
   root.setProperty('--park', parkY + 'px');
   if (dom) { dom.fits = pageFits; dom.parkY = parkY; }
