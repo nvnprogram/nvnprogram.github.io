@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>musicstudio</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="description" content="Slow down, speed up and add reverb to songs" />
+  <meta name="theme-color" content="#a4978f" />
+  <link rel="icon" type="image/png" href="favicon.png" />
+  <link rel="apple-touch-icon" href="favicon.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="musicstudio" />
+  <link rel="stylesheet" href="css/app.css" />
+</head>
+<body>
+  <canvas id="gl" aria-hidden="true"></canvas>
+  <canvas id="gl2" aria-hidden="true"></canvas>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <symbol id="i-play" viewBox="0 0 24 24"><path d="M5.5 4.6v14.8c0 1.2 1.3 1.9 2.3 1.3l11.4-7.4c.9-.6.9-1.9 0-2.5L7.8 3.3C6.8 2.7 5.5 3.4 5.5 4.6z"/></symbol>
+      <symbol id="i-pause" viewBox="0 0 24 24"><rect x="5" y="4" width="5" height="16" rx="1.5"/><rect x="14" y="4" width="5" height="16" rx="1.5"/></symbol>
+      <symbol id="i-prev" viewBox="0 0 24 24"><rect x="4" y="5" width="3.2" height="14" rx="1.2"/><path d="M19 6.1v11.8c0 1.1-1.2 1.8-2.2 1.2L8.6 13.2c-.9-.6-.9-1.8 0-2.4l8.2-5.9c1-.6 2.2.1 2.2 1.2z"/></symbol>
+      <symbol id="i-next" viewBox="0 0 24 24"><rect x="16.8" y="5" width="3.2" height="14" rx="1.2"/><path d="M5 6.1v11.8c0 1.1 1.2 1.8 2.2 1.2l8.2-5.9c.9-.6.9-1.8 0-2.4L7.2 4.9C6.2 4.3 5 5 5 6.1z"/></symbol>
+      <symbol id="i-loop" viewBox="0 0 24 24"><path d="M7 7h9V4.6c0-.5.6-.8 1-.5l3.6 3.2c.3.3.3.8 0 1.1L17 11.6c-.4.4-1 .1-1-.5V9H7c-1.1 0-2 .9-2 2v2H3v-2c0-2.2 1.8-4 4-4zm10 10H8v2.4c0 .5-.6.8-1 .5l-3.6-3.2c-.3-.3-.3-.8 0-1.1L7 12.4c.4-.4 1-.1 1 .5V15h9c1.1 0 2-.9 2-2v-2h2v2c0 2.2-1.8 4-4 4z"/></symbol>
+      <symbol id="i-loop1" viewBox="0 0 24 24"><path d="M7 7h9V4.6c0-.5.6-.8 1-.5l3.6 3.2c.3.3.3.8 0 1.1L17 11.6c-.4.4-1 .1-1-.5V9H7c-1.1 0-2 .9-2 2v2H3v-2c0-2.2 1.8-4 4-4zm10 10H8v2.4c0 .5-.6.8-1 .5l-3.6-3.2c-.3-.3-.3-.8 0-1.1L7 12.4c.4-.4 1-.1 1 .5V15h9c1.1 0 2-.9 2-2v-2h2v2c0 2.2-1.8 4-4 4z"/><path d="M11.2 9.4h1.6v5.2h-1.6v-3.5l-1 .5-.5-1.1 1.5-1.1z"/></symbol>
+      <symbol id="i-vol" viewBox="0 0 24 24"><path d="M4 9.5v5c0 .6.4 1 1 1h2.6l3.7 3.1c.7.5 1.7 0 1.7-.8V6.2c0-.8-1-1.3-1.7-.8L7.6 8.5H5c-.6 0-1 .4-1 1zm11.5 2.5c0-1.5-.8-2.8-2-3.5v7c1.2-.7 2-2 2-3.5zm-2-7v2.1c2.3.8 4 3 4 5.4s-1.7 4.6-4 5.4V20c3.4-.9 6-4.1 6-7.5S16.9 5.9 13.5 5z"/></symbol>
+      <symbol id="i-mute" viewBox="0 0 24 24"><path d="M4 9.5v5c0 .6.4 1 1 1h2.6l3.7 3.1c.7.5 1.7 0 1.7-.8V6.2c0-.8-1-1.3-1.7-.8L7.6 8.5H5c-.6 0-1 .4-1 1zm12.4.4 1.9 1.9 1.9-1.9 1.4 1.4-1.9 1.9 1.9 1.9-1.4 1.4-1.9-1.9-1.9 1.9-1.4-1.4 1.9-1.9-1.9-1.9z"/></symbol>
+      <symbol id="i-gear" viewBox="0 0 24 24"><path d="M19.4 13a7.6 7.6 0 0 0 0-2l2-1.5-1.9-3.3-2.4 1a7.7 7.7 0 0 0-1.7-1L15 3.6H9l-.4 2.6a7.7 7.7 0 0 0-1.7 1l-2.4-1L2.6 9.5 4.6 11a7.6 7.6 0 0 0 0 2l-2 1.5 1.9 3.3 2.4-1c.5.4 1.1.7 1.7 1l.4 2.6h6l.4-2.6c.6-.3 1.2-.6 1.7-1l2.4 1 1.9-3.3-2-1.5zM12 15.2a3.2 3.2 0 1 1 0-6.4 3.2 3.2 0 0 1 0 6.4z"/></symbol>
+      <symbol id="i-x" viewBox="0 0 24 24"><path d="M6.2 4.8 12 10.6l5.8-5.8 1.4 1.4L13.4 12l5.8 5.8-1.4 1.4L12 13.4l-5.8 5.8-1.4-1.4L10.6 12 4.8 6.2z"/></symbol>
+      <symbol id="i-down" viewBox="0 0 24 24"><path d="M5 9l7 7 7-7z"/></symbol>
+      <symbol id="i-plus" viewBox="0 0 24 24"><path d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6z"/></symbol>
+    </defs>
+  </svg>
+
+  <div id="topSpacer" aria-hidden="true"></div>
+  <div id="app">
+    <header class="topbar">
+      <div class="brand"><b>music</b>studio</div>
+      <button id="plToggle" class="chip" data-sd="panel" hidden aria-expanded="false" aria-controls="playlist">Playlist (<span id="plCount">0</span>) <svg class="caret"><use href="#i-down"/></svg></button>
+      <div class="spacer"></div>
+      <button id="settingsBtn" class="round-btn" data-sd="round" title="Settings" aria-label="Settings"><svg><use href="#i-gear"/></svg></button>
+    </header>
+
+    <!-- playlist: unrolls from the top bar -->
+    <div id="playlistWrap" class="pl-wrap" data-sd-layer="top" hidden>
+      <aside id="playlist" class="playlist" data-sd="panel" data-sd-rpx="26">
+        <div class="pl-actions">
+          <label class="chip" data-sd="panel" for="addInput"><svg style="width:16px;height:16px;fill:currentColor"><use href="#i-plus"/></svg> Add files
+            <input id="addInput" type="file" multiple accept="audio/*,.mp3,.wav,.flac,.ogg,.oga,.m4a,.aac,.opus,.webm" />
+          </label>
+          <button id="clearBtn" class="chip" data-sd="panel">Clear</button>
+        </div>
+        <ul id="trackList" aria-label="Playlist"></ul>
+        <div class="pl-empty" id="plEmpty">No tracks yet. Add some audio files.</div>
+      </aside>
+    </div>
+
+    <!-- landing -->
+    <main id="landing" class="view">
+      <section class="hero">
+        <h1>Make music<br>hit different</h1>
+        <p class="sub">The easiest way to make slowed+reverb, nightcore and more</p>
+        <label class="big-btn" data-sd="panel" for="fileInput">Choose an audio file to get started
+          <input id="fileInput" type="file" multiple accept="audio/*,.mp3,.wav,.flac,.ogg,.oga,.m4a,.aac,.opus,.webm" />
+        </label>
+      </section>
+      <aside class="hero-card" data-sd="panel" data-sd-radius="0.22" aria-hidden="true">
+        <div class="bars">
+          <i style="height:60%"></i><i style="height:52%"></i><i style="height:72%"></i><i style="height:90%"></i><i style="height:62%"></i><i style="height:80%"></i><i style="height:85%"></i><i style="height:70%"></i><i style="height:38%"></i>
+        </div>
+        <div class="fake-sliders"><div class="fake-slider" style="--p:22%"></div><div class="fake-slider" style="--p:48%"></div></div>
+      </aside>
+    </main>
+
+    <!-- player -->
+    <main id="player" class="view" hidden>
+      <section class="studio">
+        <button id="trackName" class="track-name chip" data-sd="panel" title="Click to replace this track with another file"><span class="marquee"><span class="mq">—</span></span></button>
+        <input id="replaceInput" type="file" multiple accept="audio/*,.mp3,.wav,.flac,.ogg,.oga,.m4a,.aac,.opus,.webm" hidden />
+        <div class="wave-wrap" data-sd="panel" data-sd-radius="0.4"><canvas id="wave" aria-label="Waveform, click to seek"></canvas></div>
+        <div class="times"><span id="tCur">0:00</span><span id="tEnd">0:00</span></div>
+
+        <div class="presets">
+          <span class="label">Presets</span>
+          <div class="row">
+            <button class="chip" data-sd="panel" data-preset="slowed">Slowed+Reverb</button>
+            <button class="chip" data-sd="panel" data-preset="nightcore">Nightcore</button>
+            <button class="chip" data-sd="panel" data-preset="reset">Original</button>
+          </div>
+        </div>
+
+        <div class="control">
+          <div class="lbl" id="speedLbl">Speed (<span id="speedVal">1x</span>)</div>
+          <div id="speed" aria-labelledby="speedLbl"></div>
+          <div class="ticks"><span>0.5x</span><span>0.75x</span><span>1x</span><span>1.25x</span><span>1.5x</span></div>
+        </div>
+        <div class="control">
+          <div class="lbl" id="reverbLbl">Reverb (<span id="reverbVal">0%</span>)</div>
+          <div id="reverb" aria-labelledby="reverbLbl"></div>
+          <div class="ticks"><span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span></div>
+        </div>
+
+        <div class="transport">
+          <button id="prevBtn" class="round-btn" data-sd="round" title="Previous" aria-label="Previous"><svg><use href="#i-prev"/></svg></button>
+          <button id="playBtn" class="round-btn big" data-sd="round" title="Play" aria-label="Play"><svg><use id="playIcon" href="#i-play"/></svg></button>
+          <button id="nextBtn" class="round-btn" data-sd="round" title="Next" aria-label="Next"><svg><use href="#i-next"/></svg></button>
+          <button id="loopBtn" class="round-btn small loop" data-sd="round" title="Repeat all" aria-label="Repeat all"><svg><use id="loopIcon" href="#i-loop"/></svg><i class="ind" id="loopInd"></i></button>
+        </div>
+
+        <div class="volume">
+          <button id="muteBtn" class="mute" title="Mute" aria-label="Mute"><svg><use id="volIcon" href="#i-vol"/></svg></button>
+          <div id="volume" aria-label="Volume"></div>
+        </div>
+
+        <div class="download">
+          <button id="dlBtn" class="chip" data-sd="panel">Download <span id="dlFmt">WAV</span></button>
+        </div>
+      </section>
+    </main>
+
+    <!-- settings drawer (theme + export format) -->
+    <div id="settingsPanel" class="drawer" data-sd="panel" data-sd-rpx="30" data-sd-layer="top" hidden>
+      <div class="drawer-scroll">
+        <h2>Settings <button class="close" id="settingsClose" aria-label="Close"><svg><use href="#i-x"/></svg></button></h2>
+        <div class="sec">Defaults for new tracks</div>
+        <div class="control small">
+          <div class="lbl" id="defSpeedLbl">Speed (<span id="defSpeedVal">0.8x</span>)</div>
+          <div id="defSpeed" aria-labelledby="defSpeedLbl"></div>
+        </div>
+        <div class="control small">
+          <div class="lbl" id="defReverbLbl">Reverb (<span id="defReverbVal">40%</span>)</div>
+          <div id="defReverb" aria-labelledby="defReverbLbl"></div>
+        </div>
+        <div class="sec">Sliders</div>
+        <div class="row"><button id="snapBtn" class="chip active" data-sd="panel" aria-pressed="true">Snap to 0.05 steps</button></div>
+        <div class="sec">Export format</div>
+        <div class="row">
+          <button id="fmtWav" class="chip" data-sd="panel" data-fmt="wav">WAV (lossless)</button>
+          <button id="fmtMp3" class="chip" data-sd="panel" data-fmt="mp3">MP3 (320 kbps)</button>
+        </div>
+        <div class="sec">Theme</div>
+        <div class="row">
+          <button id="presetLight" class="chip" data-sd="panel">Light</button>
+          <button id="presetDark" class="chip" data-sd="panel">Dark</button>
+          <button id="presetDarker" class="chip" data-sd="panel">Yet Darker</button>
+          <button id="presetCustom" class="chip" data-sd="panel">Custom</button>
+        </div>
+        <div class="sec">Accent</div>
+        <div class="row" id="accentRow">
+          <button id="accentRandom" class="chip" data-sd="panel" data-accent="random">Random</button>
+          <button id="accentSdodr" class="chip" data-sd="panel" data-accent="sdodr">Sdodr</button>
+        </div>
+        <details id="advanced">
+          <summary>Advanced colors</summary>
+          <div class="colorgrid" id="colorGrid"></div>
+        </details>
+        <div class="row">
+          <button id="savePreset" class="chip" data-sd="panel">Save preset</button>
+          <button id="loadPreset" class="chip" data-sd="panel">Load preset</button>
+        </div>
+        <p class="hint" id="themeHint">Theme presets are only saved when you press Save; after a refresh the last saved preset is used.</p>
+      </div>
+    </div>
+
+    <div id="toast" class="chip" data-sd="panel" data-sd-layer="top"></div>
+    <div id="busy" data-sd-layer="top" hidden><div class="box" data-sd="panel" data-sd-radius="0.4"><div class="spin"></div><div id="busyText">Rendering…</div></div></div>
+  </div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
